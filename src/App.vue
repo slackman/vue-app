@@ -1,11 +1,15 @@
 <script setup>
 import Button from './components/Button.vue';
+import ButtonPlay from './components/ButtonPlay.vue';
 </script>
 
 <template>
   <main class="main">
     <Button>Сохранить</Button>
   </main>
+  <div>
+    <ButtonPlay>Начать игру</ButtonPlay>
+  </div>
 </template>
 
 <style scoped>
