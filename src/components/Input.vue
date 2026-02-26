@@ -1,6 +1,6 @@
 <script setup>
+
 const data = defineModel({ type: String, required: true });
-const additional = defineModel('additional', { type: String })
 </script>
 <template>
     <input v-model="data" class="input" />

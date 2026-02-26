@@ -1,50 +1,75 @@
 <script setup>
-import Stat from './components/Stat.vue';
-import CitySelect from './components/CitySelect.vue';
-import { computed, ref } from 'vue';
+import { onMounted, provide, ref, watch } from 'vue';
+import PaneRight from './components/PaneRight.vue';
+import { API_ENDPOINT, cityProvide } from './constants';
+import PaneLeft from './components/PaneLeft.vue';
 
-let savedCity = ref("Moscow");
-let data = ref({
-  humidity: 90,
-  rain: 0,
-  wind: 3,
-})
+let data = ref();
+let error = ref();
+let activeIndex = ref(0);
+let city = ref('Moscow');
+provide(cityProvide, city);
 
-const dataModified = computed(() => {
-  return [{
-    label: "Влажность",
-    stat: data.value.humidity + '%'
-  },
-  {
-    label: "Осадки",
-    stat: data.value.rain + '%'
-  },
-  {
-    label: "Ветер",
-    stat: data.value.wind + 'м/ч'
-  },
-  ]
-})
+watch(city, () => {
+    getCity(city.value);
+});
 
+onMounted(() => {
+  getCity(city.value);
+});
 async function getCity(city) {
-  savedCity.value = city;
-  data.value.humidity = "20"
-};
-
+    const params = new URLSearchParams({
+        q: city,
+        lang: 'ru',
+        key: '27807ba758004361995110310262502',
+        days: 3,
+    });
+    const res = await fetch(
+        `${API_ENDPOINT}/forecast.json?${params.toString()}`,
+    );
+    if (res.status != 200) {
+        error.value = await res.json();
+        data.value = null;
+        return;
+    }
+    error.value = null;
+    data.value = await res.json();
+}
 </script>
 
 <template>
-  <main class="main">
-    <div id="city">{{ savedCity }}</div>
-    <Stat v-for="item in dataModified" v-bind="item" :key="item.label" />
-    <CitySelect @select-city="getCity"></CitySelect>
-  </main>
+    <main class="main">
+        <div class="left">
+          <PaneLeft v-if="data" :day-data="data.forecast.forecastday[activeIndex]"/>
+        </div>
+        <div class="right">
+            <PaneRight
+                :data
+                :error
+                :active-index="activeIndex"
+                @select-index="(i) => (activeIndex = i)"
+            />
+        </div>
+    </main>
 </template>
 
 <style scoped>
 .main {
-  background: var(--color-bg-main);
-  padding: 60px 50px;
-  border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.right {
+    background: var(--color-bg-main);
+    padding: 60px 50px;
+    border-radius: 0px 25px 25px 0px;
+}
+.left {
+    width: 500px;
+    height: 680px;
+    border-radius: 30px;
+    background-image: url('/public/bg.png');
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 </style>
